@@ -18,7 +18,18 @@
       }
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "icon": "./assets/icon.png",
+      "name": "World Cup Tracker",
+      "shortName": "WC Tracker",
+      "description": "Follow the World Cup 2024 live — matches, standings, stats and more.",
+      "themeColor": "#0F143C",
+      "backgroundColor": "#0F143C",
+      "lang": "en",
+      "scope": "/",
+      "startUrl": "/",
+      "display": "standalone",
+      "orientation": "portrait"
     }
   }
 }
