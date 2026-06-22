@@ -12,7 +12,7 @@ import ProfileScreen from './screens/ProfileScreen';
 const Tab = createBottomTabNavigator();
 
 const TAB_ICONS = {
-  Live: ['radio', 'radio-outline'],
+  Home: ['home', 'home-outline'],
   Matches: ['calendar', 'calendar-outline'],
   Tables: ['list', 'list-outline'],
   Stats: ['bar-chart', 'bar-chart-outline'],
@@ -46,7 +46,7 @@ export default function App() {
           },
         })}
       >
-        <Tab.Screen name="Live" component={HomeScreen} />
+        <Tab.Screen name="Home" component={HomeScreen} />
         <Tab.Screen name="Matches" component={MatchesScreen} />
         <Tab.Screen name="Tables" component={TablesScreen} />
         <Tab.Screen name="Stats" component={StatsScreen} />
