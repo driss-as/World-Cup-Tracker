@@ -1,5 +1,6 @@
+import { useState, useCallback } from 'react';
 import { useWindowDimensions, View, TouchableOpacity, Text } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,6 +13,7 @@ import ProfileScreen from './screens/ProfileScreen';
 import Sidebar from './components/Sidebar';
 
 const Tab = createBottomTabNavigator();
+const navigationRef = createNavigationContainerRef();
 
 const TAB_ICONS = {
   Home:    ['home',      'home-outline'],
@@ -44,11 +46,7 @@ function BottomTabBar({ state, navigation }) {
             onPress={() => navigation.navigate(route.name)}
             activeOpacity={0.7}
           >
-            <Ionicons
-              name={focused ? active : inactive}
-              size={22}
-              color={focused ? '#2ECC71' : '#8A9CC2'}
-            />
+            <Ionicons name={focused ? active : inactive} size={22} color={focused ? '#2ECC71' : '#8A9CC2'} />
             <Text style={{ fontSize: 11, fontWeight: '600', color: focused ? '#2ECC71' : '#8A9CC2' }}>
               {route.name}
             </Text>
@@ -59,35 +57,57 @@ function BottomTabBar({ state, navigation }) {
   );
 }
 
-function CustomTabBar(props) {
+function Layout({ currentRoute, setCurrentRoute }) {
   const { width } = useWindowDimensions();
-  if (width >= BREAKPOINT) return <Sidebar {...props} />;
-  return <BottomTabBar {...props} />;
+  const isWide = width >= BREAKPOINT;
+
+  const handleNavigate = useCallback((name) => {
+    if (navigationRef.isReady()) navigationRef.navigate(name);
+  }, []);
+
+  return (
+    <View style={{ flex: 1, flexDirection: 'row', backgroundColor: '#0F143C' }}>
+      {isWide && (
+        <Sidebar currentRoute={currentRoute} onNavigate={handleNavigate} />
+      )}
+      <View style={{ flex: 1 }}>
+        <Tab.Navigator
+          tabBar={(props) => isWide ? null : <BottomTabBar {...props} />}
+          screenOptions={({ route }) => ({
+            headerShown: false,
+            tabBarIcon: ({ focused, color }) => {
+              const [active, inactive] = TAB_ICONS[route.name];
+              return <Ionicons name={focused ? active : inactive} size={22} color={color} />;
+            },
+            tabBarActiveTintColor: '#2ECC71',
+            tabBarInactiveTintColor: '#8A9CC2',
+          })}
+        >
+          <Tab.Screen name="Home"    component={HomeScreen} />
+          <Tab.Screen name="Matches" component={MatchesScreen} />
+          <Tab.Screen name="Tables"  component={TablesScreen} />
+          <Tab.Screen name="Stats"   component={StatsScreen} />
+          <Tab.Screen name="Profile" component={ProfileScreen} />
+        </Tab.Navigator>
+      </View>
+    </View>
+  );
 }
 
 export default function App() {
+  const [currentRoute, setCurrentRoute] = useState('Home');
+
   return (
-    <NavigationContainer>
+    <NavigationContainer
+      ref={navigationRef}
+      onStateChange={() => {
+        if (navigationRef.isReady()) {
+          setCurrentRoute(navigationRef.getCurrentRoute()?.name ?? 'Home');
+        }
+      }}
+    >
       <StatusBar style="light" />
-      <Tab.Navigator
-        tabBar={(props) => <CustomTabBar {...props} />}
-        screenOptions={({ route }) => ({
-          headerShown: false,
-          tabBarIcon: ({ focused, color }) => {
-            const [active, inactive] = TAB_ICONS[route.name];
-            return <Ionicons name={focused ? active : inactive} size={22} color={color} />;
-          },
-          tabBarActiveTintColor: '#2ECC71',
-          tabBarInactiveTintColor: '#8A9CC2',
-          tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
-        })}
-      >
-        <Tab.Screen name="Home"    component={HomeScreen} />
-        <Tab.Screen name="Matches" component={MatchesScreen} />
-        <Tab.Screen name="Tables"  component={TablesScreen} />
-        <Tab.Screen name="Stats"   component={StatsScreen} />
-        <Tab.Screen name="Profile" component={ProfileScreen} />
-      </Tab.Navigator>
+      <Layout currentRoute={currentRoute} setCurrentRoute={setCurrentRoute} />
     </NavigationContainer>
   );
 }
