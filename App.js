@@ -106,7 +106,7 @@ export default function App() {
         }
       }}
     >
-      <StatusBar style="light" />
+      <StatusBar style="light" backgroundColor="#0F143C" />
       <Layout currentRoute={currentRoute} setCurrentRoute={setCurrentRoute} />
     </NavigationContainer>
   );
