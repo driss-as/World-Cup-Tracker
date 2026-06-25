@@ -8,7 +8,7 @@ import {
   Switch,
 } from 'react-native';
 import { useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { useAuth } from '../lib/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
 
 const C = {
@@ -63,16 +63,14 @@ const SETTINGS = [
 ];
 
 export default function ProfileScreen() {
+  const { signOut } = useAuth();
   const [toggles, setToggles] = useState({ 'Match Alerts': true, 'Goal Notifications': true, 'Weekly Digest': false });
 
   const flipToggle = (label) =>
     setToggles((t) => ({ ...t, [label]: !t[label] }));
 
   const handlePress = async (item) => {
-    if (item.label === 'Sign Out') {
-      await supabase.auth.signOut({ scope: 'local' });
-      return;
-    }
+    if (item.label === 'Sign Out') { await signOut(); return; }
     if (item.onPress) item.onPress();
   };
 

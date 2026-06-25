@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useWindowDimensions, View, TouchableOpacity, Text } from 'react-native';
 import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -12,7 +12,7 @@ import StatsScreen from './screens/StatsScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import AuthScreen from './screens/AuthScreen';
 import Sidebar from './components/Sidebar';
-import { supabase } from './lib/supabase';
+import { AuthProvider, useAuth } from './lib/AuthContext';
 
 const Tab = createBottomTabNavigator();
 const navigationRef = createNavigationContainerRef();
@@ -59,57 +59,53 @@ function BottomTabBar({ state, navigation }) {
   );
 }
 
-function MainApp({ currentRoute, setCurrentRoute }) {
+function MainApp() {
   const { width } = useWindowDimensions();
   const isWide = width >= BREAKPOINT;
+  const [currentRoute, setCurrentRoute] = useState('Home');
 
   const handleNavigate = useCallback((name) => {
     if (navigationRef.isReady()) navigationRef.navigate(name);
   }, []);
 
   return (
-    <View style={{ flex: 1, flexDirection: 'row', backgroundColor: '#0F143C' }}>
-      {isWide && <Sidebar currentRoute={currentRoute} onNavigate={handleNavigate} />}
-      <View style={{ flex: 1 }}>
-        <Tab.Navigator
-          tabBar={(props) => isWide ? null : <BottomTabBar {...props} />}
-          screenOptions={({ route }) => ({
-            headerShown: false,
-            tabBarIcon: ({ focused, color }) => {
-              const [active, inactive] = TAB_ICONS[route.name];
-              return <Ionicons name={focused ? active : inactive} size={22} color={color} />;
-            },
-            tabBarActiveTintColor: '#2ECC71',
-            tabBarInactiveTintColor: '#8A9CC2',
-          })}
-        >
-          <Tab.Screen name="Home"    component={HomeScreen} />
-          <Tab.Screen name="Matches" component={MatchesScreen} />
-          <Tab.Screen name="Tables"  component={TablesScreen} />
-          <Tab.Screen name="Stats"   component={StatsScreen} />
-          <Tab.Screen name="Profile" component={ProfileScreen} />
-        </Tab.Navigator>
+    <NavigationContainer
+      ref={navigationRef}
+      onStateChange={() => {
+        if (navigationRef.isReady())
+          setCurrentRoute(navigationRef.getCurrentRoute()?.name ?? 'Home');
+      }}
+    >
+      <View style={{ flex: 1, flexDirection: 'row', backgroundColor: '#0F143C' }}>
+        {isWide && <Sidebar currentRoute={currentRoute} onNavigate={handleNavigate} />}
+        <View style={{ flex: 1 }}>
+          <Tab.Navigator
+            tabBar={(props) => isWide ? null : <BottomTabBar {...props} />}
+            screenOptions={({ route }) => ({
+              headerShown: false,
+              tabBarIcon: ({ focused, color }) => {
+                const [active, inactive] = TAB_ICONS[route.name];
+                return <Ionicons name={focused ? active : inactive} size={22} color={color} />;
+              },
+              tabBarActiveTintColor: '#2ECC71',
+              tabBarInactiveTintColor: '#8A9CC2',
+            })}
+          >
+            <Tab.Screen name="Home"    component={HomeScreen} />
+            <Tab.Screen name="Matches" component={MatchesScreen} />
+            <Tab.Screen name="Tables"  component={TablesScreen} />
+            <Tab.Screen name="Stats"   component={StatsScreen} />
+            <Tab.Screen name="Profile" component={ProfileScreen} />
+          </Tab.Navigator>
+        </View>
       </View>
-    </View>
+    </NavigationContainer>
   );
 }
 
-export default function App() {
-  const [session, setSession] = useState(undefined); // undefined = loading
-  const [currentRoute, setCurrentRoute] = useState('Home');
+function AppContent() {
+  const { session } = useAuth();
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => setSession(session ?? null));
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_OUT') setSession(null);
-      else setSession(session ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  // Still loading
   if (session === undefined) {
     return (
       <View style={{ flex: 1, backgroundColor: '#0F143C', alignItems: 'center', justifyContent: 'center' }}>
@@ -119,28 +115,18 @@ export default function App() {
     );
   }
 
-  // Not authenticated
-  if (!session) {
-    return (
-      <>
-        <StatusBar style="light" backgroundColor="#0F143C" />
-        <AuthScreen />
-      </>
-    );
-  }
-
-  // Authenticated
   return (
-    <NavigationContainer
-      ref={navigationRef}
-      onStateChange={() => {
-        if (navigationRef.isReady()) {
-          setCurrentRoute(navigationRef.getCurrentRoute()?.name ?? 'Home');
-        }
-      }}
-    >
+    <>
       <StatusBar style="light" backgroundColor="#0F143C" />
-      <MainApp currentRoute={currentRoute} setCurrentRoute={setCurrentRoute} />
-    </NavigationContainer>
+      {session ? <MainApp /> : <AuthScreen />}
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
