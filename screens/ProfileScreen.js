@@ -57,7 +57,7 @@ const SETTINGS = [
     items: [
       { icon: 'person-outline',     label: 'Edit Profile',   chevron: true },
       { icon: 'shield-outline',     label: 'Privacy',        chevron: true },
-      { icon: 'log-out-outline',    label: 'Sign Out',       danger: true, onPress: () => supabase.auth.signOut() },
+      { icon: 'log-out-outline',    label: 'Sign Out',       danger: true },
     ],
   },
 ];
@@ -67,6 +67,14 @@ export default function ProfileScreen() {
 
   const flipToggle = (label) =>
     setToggles((t) => ({ ...t, [label]: !t[label] }));
+
+  const handlePress = (item) => {
+    if (item.label === 'Sign Out') {
+      supabase.auth.signOut();
+      return;
+    }
+    if (item.onPress) item.onPress();
+  };
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -138,8 +146,8 @@ export default function ProfileScreen() {
               <TouchableOpacity
                 key={i}
                 style={[styles.settingRow, i < section.items.length - 1 && styles.settingBorder]}
-                activeOpacity={item.toggle ? 1 : 0.6}
-                onPress={item.onPress}
+                activeOpacity={item.toggle ? 1 : 0.7}
+                onPress={() => handlePress(item)}
               >
                 <View style={styles.settingLeft}>
                   <View style={[styles.settingIcon, item.danger && { backgroundColor: C.danger + '22' }]}>
