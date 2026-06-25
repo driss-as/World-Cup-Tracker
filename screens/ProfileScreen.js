@@ -8,6 +8,7 @@ import {
   Switch,
 } from 'react-native';
 import { useState } from 'react';
+import { supabase } from '../lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
 
 const C = {
@@ -56,7 +57,7 @@ const SETTINGS = [
     items: [
       { icon: 'person-outline',     label: 'Edit Profile',   chevron: true },
       { icon: 'shield-outline',     label: 'Privacy',        chevron: true },
-      { icon: 'log-out-outline',    label: 'Sign Out',       danger: true  },
+      { icon: 'log-out-outline',    label: 'Sign Out',       danger: true, onPress: () => supabase.auth.signOut() },
     ],
   },
 ];
@@ -138,6 +139,7 @@ export default function ProfileScreen() {
                 key={i}
                 style={[styles.settingRow, i < section.items.length - 1 && styles.settingBorder]}
                 activeOpacity={item.toggle ? 1 : 0.6}
+                onPress={item.onPress}
               >
                 <View style={styles.settingLeft}>
                   <View style={[styles.settingIcon, item.danger && { backgroundColor: C.danger + '22' }]}>

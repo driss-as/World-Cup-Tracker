@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useWindowDimensions, View, TouchableOpacity, Text } from 'react-native';
 import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -10,7 +10,9 @@ import MatchesScreen from './screens/MatchesScreen';
 import TablesScreen from './screens/TablesScreen';
 import StatsScreen from './screens/StatsScreen';
 import ProfileScreen from './screens/ProfileScreen';
+import AuthScreen from './screens/AuthScreen';
 import Sidebar from './components/Sidebar';
+import { supabase } from './lib/supabase';
 
 const Tab = createBottomTabNavigator();
 const navigationRef = createNavigationContainerRef();
@@ -57,7 +59,7 @@ function BottomTabBar({ state, navigation }) {
   );
 }
 
-function Layout({ currentRoute, setCurrentRoute }) {
+function MainApp({ currentRoute, setCurrentRoute }) {
   const { width } = useWindowDimensions();
   const isWide = width >= BREAKPOINT;
 
@@ -67,9 +69,7 @@ function Layout({ currentRoute, setCurrentRoute }) {
 
   return (
     <View style={{ flex: 1, flexDirection: 'row', backgroundColor: '#0F143C' }}>
-      {isWide && (
-        <Sidebar currentRoute={currentRoute} onNavigate={handleNavigate} />
-      )}
+      {isWide && <Sidebar currentRoute={currentRoute} onNavigate={handleNavigate} />}
       <View style={{ flex: 1 }}>
         <Tab.Navigator
           tabBar={(props) => isWide ? null : <BottomTabBar {...props} />}
@@ -95,8 +95,40 @@ function Layout({ currentRoute, setCurrentRoute }) {
 }
 
 export default function App() {
+  const [session, setSession] = useState(undefined); // undefined = loading
   const [currentRoute, setCurrentRoute] = useState('Home');
 
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Still loading
+  if (session === undefined) {
+    return (
+      <View style={{ flex: 1, backgroundColor: '#0F143C', alignItems: 'center', justifyContent: 'center' }}>
+        <StatusBar style="light" backgroundColor="#0F143C" />
+        <Ionicons name="football" size={48} color="#2ECC71" />
+      </View>
+    );
+  }
+
+  // Not authenticated
+  if (!session) {
+    return (
+      <>
+        <StatusBar style="light" backgroundColor="#0F143C" />
+        <AuthScreen />
+      </>
+    );
+  }
+
+  // Authenticated
   return (
     <NavigationContainer
       ref={navigationRef}
@@ -107,7 +139,7 @@ export default function App() {
       }}
     >
       <StatusBar style="light" backgroundColor="#0F143C" />
-      <Layout currentRoute={currentRoute} setCurrentRoute={setCurrentRoute} />
+      <MainApp currentRoute={currentRoute} setCurrentRoute={setCurrentRoute} />
     </NavigationContainer>
   );
 }
