@@ -68,9 +68,9 @@ export default function ProfileScreen() {
   const flipToggle = (label) =>
     setToggles((t) => ({ ...t, [label]: !t[label] }));
 
-  const handlePress = (item) => {
+  const handlePress = async (item) => {
     if (item.label === 'Sign Out') {
-      supabase.auth.signOut();
+      await supabase.auth.signOut({ scope: 'local' });
       return;
     }
     if (item.onPress) item.onPress();
