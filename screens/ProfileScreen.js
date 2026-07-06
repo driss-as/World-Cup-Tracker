@@ -20,9 +20,10 @@ const C = {
   textMuted: '#8A9CC2',
   border: '#1E2D6B',
   danger: '#E74C3C',
+  accent: '#2D9CDB',
 };
 
-export default function ProfileScreen() {
+export default function ProfileScreen({ navigation }) {
   const { session, signOut } = useAuth();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -122,6 +123,21 @@ export default function ProfileScreen() {
           <Text style={styles.userHandle}>{username}{profile?.fan_since ? ` • Fan since ${profile.fan_since}` : ''}</Text>
         </View>
 
+        <TouchableOpacity
+          style={styles.premiumCard}
+          activeOpacity={0.82}
+          onPress={() => navigation.navigate('Premium')}
+        >
+          <View style={styles.premiumIcon}>
+            <Ionicons name="diamond" size={22} color={C.bg} />
+          </View>
+          <View style={styles.premiumContent}>
+            <Text style={styles.premiumTitle}>Become Premium</Text>
+            <Text style={styles.premiumText}>Unlock advanced World Cup insights and member features.</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={C.text} />
+        </TouchableOpacity>
+
         {/* Settings sections */}
         {settings.map((section) => (
           <View key={section.section} style={styles.card}>
@@ -212,6 +228,27 @@ const styles = StyleSheet.create({
   },
   userName: { color: C.text, fontSize: 22, fontWeight: '800', marginBottom: 4 },
   userHandle: { color: C.textMuted, fontSize: 13, fontWeight: '500', marginBottom: 20 },
+
+  premiumCard: {
+    backgroundColor: C.accent,
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  premiumIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: C.text,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  premiumContent: { flex: 1 },
+  premiumTitle: { color: C.text, fontSize: 16, fontWeight: '900', marginBottom: 4 },
+  premiumText: { color: C.text, fontSize: 13, fontWeight: '600', lineHeight: 18, opacity: 0.88 },
 
   card: {
     backgroundColor: C.card,

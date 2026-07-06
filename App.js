@@ -9,6 +9,7 @@ import HomeScreen from './screens/HomeScreen';
 import MatchesScreen from './screens/MatchesScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import NewsDetailScreen from './screens/NewsDetailScreen';
+import PremiumScreen from './screens/PremiumScreen';
 import AuthScreen from './screens/AuthScreen';
 import Sidebar from './components/Sidebar';
 import { AuthProvider, useAuth } from './lib/AuthContext';
@@ -82,7 +83,7 @@ function MainApp() {
             screenOptions={({ route }) => ({
               headerShown: false,
               tabBarIcon: ({ focused, color }) => {
-                const [active, inactive] = TAB_ICONS[route.name];
+                const [active, inactive] = TAB_ICONS[route.name] ?? ['ellipse', 'ellipse-outline'];
                 return <Ionicons name={focused ? active : inactive} size={22} color={color} />;
               },
               tabBarActiveTintColor: '#2ECC71',
@@ -93,6 +94,7 @@ function MainApp() {
             <Tab.Screen name="Matches" component={MatchesScreen} />
             <Tab.Screen name="Profile" component={ProfileScreen} />
             <Tab.Screen name="NewsDetail" component={NewsDetailScreen} />
+            <Tab.Screen name="Premium" component={PremiumScreen} />
           </Tab.Navigator>
         </View>
       </View>
