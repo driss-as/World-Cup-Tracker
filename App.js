@@ -7,9 +7,8 @@ import { Ionicons } from '@expo/vector-icons';
 
 import HomeScreen from './screens/HomeScreen';
 import MatchesScreen from './screens/MatchesScreen';
-import TablesScreen from './screens/TablesScreen';
-import StatsScreen from './screens/StatsScreen';
 import ProfileScreen from './screens/ProfileScreen';
+import NewsDetailScreen from './screens/NewsDetailScreen';
 import AuthScreen from './screens/AuthScreen';
 import Sidebar from './components/Sidebar';
 import { AuthProvider, useAuth } from './lib/AuthContext';
@@ -20,8 +19,6 @@ const navigationRef = createNavigationContainerRef();
 const TAB_ICONS = {
   Home:    ['home',      'home-outline'],
   Matches: ['calendar',  'calendar-outline'],
-  Tables:  ['list',      'list-outline'],
-  Stats:   ['bar-chart', 'bar-chart-outline'],
   Profile: ['person',    'person-outline'],
 };
 
@@ -38,7 +35,8 @@ function BottomTabBar({ state, navigation }) {
       paddingBottom: 10,
       paddingTop: 8,
     }}>
-      {state.routes.map((route, index) => {
+      {state.routes.filter((route) => TAB_ICONS[route.name]).map((route) => {
+        const index = state.routes.findIndex((item) => item.key === route.key);
         const focused = state.index === index;
         const [active, inactive] = TAB_ICONS[route.name];
         return (
@@ -93,9 +91,8 @@ function MainApp() {
           >
             <Tab.Screen name="Home"    component={HomeScreen} />
             <Tab.Screen name="Matches" component={MatchesScreen} />
-            <Tab.Screen name="Tables"  component={TablesScreen} />
-            <Tab.Screen name="Stats"   component={StatsScreen} />
             <Tab.Screen name="Profile" component={ProfileScreen} />
+            <Tab.Screen name="NewsDetail" component={NewsDetailScreen} />
           </Tab.Navigator>
         </View>
       </View>

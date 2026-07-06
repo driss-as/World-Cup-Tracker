@@ -11,8 +11,6 @@ const C = {
 const ROUTES = [
   { name: 'Home',    icons: ['home',      'home-outline']      },
   { name: 'Matches', icons: ['calendar',  'calendar-outline']  },
-  { name: 'Tables',  icons: ['list',      'list-outline']      },
-  { name: 'Stats',   icons: ['bar-chart', 'bar-chart-outline'] },
   { name: 'Profile', icons: ['person',    'person-outline']    },
 ];
 
@@ -25,7 +23,7 @@ export default function Sidebar({ currentRoute, onNavigate }) {
         </View>
         <View>
           <Text style={styles.brandTitle}>WORLD CUP</Text>
-          <Text style={styles.brandSub}>2024</Text>
+          <Text style={styles.brandSub}>2022</Text>
         </View>
       </View>
 

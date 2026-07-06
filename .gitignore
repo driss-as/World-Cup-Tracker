@@ -40,3 +40,6 @@ yarn-error.*
 /ios
 /android
 .env
+.mcp.json
+.vercel
+supabase/.temp

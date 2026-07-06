@@ -5,74 +5,90 @@ import {
   ScrollView,
   TouchableOpacity,
   SafeAreaView,
-  Switch,
+  ActivityIndicator,
 } from 'react-native';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../lib/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
+import { supabase } from '../lib/supabase';
 
 const C = {
   bg: '#0F143C',
   card: '#162052',
-  cardDark: '#0D1835',
   primary: '#2ECC71',
-  tertiary: '#F1C40F',
   text: '#FFFFFF',
   textMuted: '#8A9CC2',
   border: '#1E2D6B',
   danger: '#E74C3C',
 };
 
-const stats = [
-  { label: 'Matches\nWatched', value: '48' },
-  { label: 'Favourite\nTeam',  value: '🇫🇷' },
-  { label: 'Predictions\nCorrect', value: '73%' },
-];
-
-const favourites = [
-  { flag: '🇫🇷', name: 'France',    group: 'Group A' },
-  { flag: '🇧🇷', name: 'Brazil',    group: 'Group A' },
-  { flag: '🇦🇷', name: 'Argentina', group: 'Group B' },
-];
-
-const SETTINGS = [
-  {
-    section: 'Notifications',
-    items: [
-      { icon: 'notifications-outline', label: 'Match Alerts',      toggle: true,  defaultOn: true  },
-      { icon: 'megaphone-outline',     label: 'Goal Notifications', toggle: true,  defaultOn: true  },
-      { icon: 'mail-outline',          label: 'Weekly Digest',      toggle: true,  defaultOn: false },
-    ],
-  },
-  {
-    section: 'Preferences',
-    items: [
-      { icon: 'flag-outline',       label: 'Default Team',   value: 'France',  chevron: true },
-      { icon: 'language-outline',   label: 'Language',       value: 'English', chevron: true },
-      { icon: 'trophy-outline',     label: 'My Predictions',                   chevron: true },
-    ],
-  },
-  {
-    section: 'Account',
-    items: [
-      { icon: 'person-outline',     label: 'Edit Profile',   chevron: true },
-      { icon: 'shield-outline',     label: 'Privacy',        chevron: true },
-      { icon: 'log-out-outline',    label: 'Sign Out',       danger: true },
-    ],
-  },
-];
-
 export default function ProfileScreen() {
-  const { signOut } = useAuth();
-  const [toggles, setToggles] = useState({ 'Match Alerts': true, 'Goal Notifications': true, 'Weekly Digest': false });
+  const { session, signOut } = useAuth();
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const flipToggle = (label) =>
-    setToggles((t) => ({ ...t, [label]: !t[label] }));
+  const fetchProfileData = useCallback(async () => {
+    if (!session?.user?.id) return;
+
+    const userId = session.user.id;
+    const emailName = session.user.email?.split('@')[0] ?? 'Fan';
+
+    const { data: existingProfile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', userId)
+      .maybeSingle();
+
+    if (!existingProfile) {
+      await supabase
+        .from('profiles')
+        .insert({
+          id: userId,
+          display_name: session.user.user_metadata?.display_name ?? emailName,
+          username: session.user.user_metadata?.username ?? null,
+        });
+    }
+
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('*, favorite_team:teams(name, flag)')
+      .eq('id', userId)
+      .maybeSingle();
+
+    setProfile(profileData);
+    setLoading(false);
+  }, [session]);
+
+  useEffect(() => {
+    fetchProfileData();
+
+    const channel = supabase
+      .channel('profile_screen')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, fetchProfileData)
+      .subscribe();
+
+    return () => supabase.removeChannel(channel);
+  }, [fetchProfileData]);
 
   const handlePress = async (item) => {
     if (item.label === 'Sign Out') { await signOut(); return; }
     if (item.onPress) item.onPress();
   };
+
+  const settings = [
+    {
+      section: 'Account',
+      items: [
+        { icon: 'person-outline', label: 'Edit Profile', chevron: true },
+        { icon: 'shield-outline', label: 'Privacy', chevron: true },
+        { icon: 'log-out-outline', label: 'Sign Out', danger: true },
+      ],
+    },
+  ];
+
+  const displayName = profile?.display_name ?? session?.user?.email?.split('@')[0] ?? 'Fan';
+  const username = profile?.username ? '@' + profile.username : session?.user?.email ?? '@fan';
+  const avatarLetter = displayName.slice(0, 1).toUpperCase();
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -80,71 +96,41 @@ export default function ProfileScreen() {
         <TouchableOpacity>
           <Ionicons name="menu" size={26} color={C.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>WORLD CUP 2024</Text>
+        <Text style={styles.headerTitle}>WORLD CUP 2022</Text>
         <TouchableOpacity>
           <Ionicons name="notifications-outline" size={24} color={C.text} />
         </TouchableOpacity>
       </View>
 
+      {loading ? (
+        <View style={styles.loader}>
+          <ActivityIndicator size="large" color={C.primary} />
+        </View>
+      ) : (
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* Avatar + name */}
         <View style={styles.profileCard}>
           <View style={styles.avatarWrapper}>
             <View style={styles.avatar}>
-              <Text style={styles.avatarText}>D</Text>
+              <Text style={styles.avatarText}>{avatarLetter}</Text>
             </View>
             <TouchableOpacity style={styles.editBadge}>
               <Ionicons name="camera" size={14} color={C.bg} />
             </TouchableOpacity>
           </View>
-          <Text style={styles.userName}>Driss</Text>
-          <Text style={styles.userHandle}>@driss • Fan since 2018</Text>
-
-          <View style={styles.statsRow}>
-            {stats.map((s, i) => (
-              <View key={i} style={styles.statBlock}>
-                <Text style={styles.statValue}>{s.value}</Text>
-                <Text style={styles.statLabel}>{s.label}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-
-        {/* Favourite Teams */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>Favourite Teams</Text>
-            <TouchableOpacity>
-              <Ionicons name="add-circle-outline" size={22} color={C.primary} />
-            </TouchableOpacity>
-          </View>
-          {favourites.map((t, i) => (
-            <View key={i} style={[styles.favRow, i < favourites.length - 1 && styles.favBorder]}>
-              <View style={styles.favLeft}>
-                <View style={styles.favFlag}>
-                  <Text style={{ fontSize: 22 }}>{t.flag}</Text>
-                </View>
-                <View>
-                  <Text style={styles.favName}>{t.name}</Text>
-                  <Text style={styles.favSub}>{t.group}</Text>
-                </View>
-              </View>
-              <TouchableOpacity>
-                <Ionicons name="star" size={18} color={C.tertiary} />
-              </TouchableOpacity>
-            </View>
-          ))}
+          <Text style={styles.userName}>{displayName}</Text>
+          <Text style={styles.userHandle}>{username}{profile?.fan_since ? ` • Fan since ${profile.fan_since}` : ''}</Text>
         </View>
 
         {/* Settings sections */}
-        {SETTINGS.map((section) => (
+        {settings.map((section) => (
           <View key={section.section} style={styles.card}>
             <Text style={styles.sectionLabel}>{section.section.toUpperCase()}</Text>
             {section.items.map((item, i) => (
               <TouchableOpacity
                 key={i}
                 style={[styles.settingRow, i < section.items.length - 1 && styles.settingBorder]}
-                activeOpacity={item.toggle ? 1 : 0.7}
+                activeOpacity={0.7}
                 onPress={() => handlePress(item)}
               >
                 <View style={styles.settingLeft}>
@@ -161,14 +147,6 @@ export default function ProfileScreen() {
                 </View>
                 <View style={styles.settingRight}>
                   {item.value && <Text style={styles.settingValue}>{item.value}</Text>}
-                  {item.toggle && (
-                    <Switch
-                      value={toggles[item.label]}
-                      onValueChange={() => flipToggle(item.label)}
-                      trackColor={{ false: C.border, true: C.primary }}
-                      thumbColor={C.text}
-                    />
-                  )}
                   {item.chevron && (
                     <Ionicons name="chevron-forward" size={18} color={C.textMuted} />
                   )}
@@ -180,6 +158,7 @@ export default function ProfileScreen() {
 
         <Text style={styles.version}>World Cup Tracker v1.0.0</Text>
       </ScrollView>
+      )}
     </SafeAreaView>
   );
 }
@@ -195,6 +174,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: { fontSize: 18, fontWeight: '800', color: C.primary, letterSpacing: 1 },
   scroll: { flex: 1, paddingHorizontal: 16 },
+  loader: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 
   profileCard: {
     backgroundColor: C.card,
@@ -233,17 +213,6 @@ const styles = StyleSheet.create({
   userName: { color: C.text, fontSize: 22, fontWeight: '800', marginBottom: 4 },
   userHandle: { color: C.textMuted, fontSize: 13, fontWeight: '500', marginBottom: 20 },
 
-  statsRow: {
-    flexDirection: 'row',
-    width: '100%',
-    borderTopWidth: 1,
-    borderColor: C.border,
-    paddingTop: 16,
-  },
-  statBlock: { flex: 1, alignItems: 'center' },
-  statValue: { color: C.primary, fontSize: 20, fontWeight: '900', marginBottom: 4 },
-  statLabel: { color: C.textMuted, fontSize: 11, fontWeight: '600', textAlign: 'center', lineHeight: 15 },
-
   card: {
     backgroundColor: C.card,
     borderRadius: 14,
@@ -252,35 +221,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: C.border,
   },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  cardTitle: { color: C.text, fontSize: 16, fontWeight: '700' },
-
-  favRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-  },
-  favBorder: { borderBottomWidth: 1, borderColor: C.border },
-  favLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  favFlag: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: C.cardDark,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: C.border,
-  },
-  favName: { color: C.text, fontSize: 14, fontWeight: '700' },
-  favSub: { color: C.textMuted, fontSize: 12, marginTop: 2 },
-
   sectionLabel: {
     color: C.textMuted,
     fontSize: 11,

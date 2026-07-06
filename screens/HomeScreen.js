@@ -1,17 +1,18 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   StyleSheet, Text, View, ScrollView,
-  TouchableOpacity, SafeAreaView, ActivityIndicator,
+  TouchableOpacity, SafeAreaView, ActivityIndicator, Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
+import { getTeamFlag } from '../lib/flags';
 
 const C = {
   bg: '#0F143C',
   card: '#162052',
   cardDark: '#0D1835',
   primary: '#2ECC71',
-  tertiary: '#F1C40F',
+  tertiary: '#2D9CDB',
   text: '#FFFFFF',
   textMuted: '#8A9CC2',
   border: '#1E2D6B',
@@ -32,18 +33,14 @@ function formatKickoff(ts) {
     + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 }
 
-const news = [
-  { tag: 'INJURY UPDATE', tagColor: C.tertiary, title: "Mbappé cleared for duty — Team doctors confirm fitness" },
-  { tag: 'ANALYSIS', tagColor: C.primary, title: "Tactical Shift: Brazil's new pressing system explained" },
-];
-
-export default function HomeScreen() {
+export default function HomeScreen({ navigation }) {
   const [liveMatches, setLiveMatches]         = useState([]);
   const [upcomingMatches, setUpcomingMatches] = useState([]);
+  const [newsArticles, setNewsArticles]       = useState([]);
   const [loading, setLoading]                 = useState(true);
 
   const fetchMatches = useCallback(async () => {
-    const [{ data: live }, { data: upcoming }] = await Promise.all([
+    const [{ data: live }, { data: upcoming }, { data: articles }] = await Promise.all([
       supabase
         .from('matches')
         .select('*')
@@ -55,9 +52,15 @@ export default function HomeScreen() {
         .eq('status', 'scheduled')
         .order('kickoff_at', { ascending: true })
         .limit(5),
+      supabase
+        .from('news_articles')
+        .select('*')
+        .order('published_at', { ascending: false })
+        .limit(5),
     ]);
     setLiveMatches(live ?? []);
     setUpcomingMatches(upcoming ?? []);
+    setNewsArticles(articles ?? []);
     setLoading(false);
   }, []);
 
@@ -67,6 +70,7 @@ export default function HomeScreen() {
     const channel = supabase
       .channel('matches_home')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, fetchMatches)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'news_articles' }, fetchMatches)
       .subscribe();
 
     return () => supabase.removeChannel(channel);
@@ -81,7 +85,7 @@ export default function HomeScreen() {
         <TouchableOpacity>
           <Ionicons name="menu" size={26} color={C.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>WORLD CUP 2024</Text>
+        <Text style={styles.headerTitle}>WORLD CUP 2022</Text>
         <TouchableOpacity>
           <Ionicons name="notifications-outline" size={24} color={C.text} />
         </TouchableOpacity>
@@ -104,14 +108,14 @@ export default function HomeScreen() {
               <View style={styles.matchRow}>
                 <View style={styles.teamBlock}>
                   <View style={styles.flagCircle}>
-                    <Text style={styles.flagEmoji}>{featured.home_flag}</Text>
+                    <Text style={styles.flagEmoji}>{getTeamFlag(featured.home_team, featured.home_flag)}</Text>
                   </View>
                   <Text style={styles.teamName}>{featured.home_team}</Text>
                 </View>
                 <Text style={styles.score}>{featured.home_score} - {featured.away_score}</Text>
                 <View style={styles.teamBlock}>
                   <View style={styles.flagCircle}>
-                    <Text style={styles.flagEmoji}>{featured.away_flag}</Text>
+                    <Text style={styles.flagEmoji}>{getTeamFlag(featured.away_team, featured.away_flag)}</Text>
                   </View>
                   <Text style={styles.teamName}>{featured.away_team}</Text>
                 </View>
@@ -133,7 +137,7 @@ export default function HomeScreen() {
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>Ongoing Matches</Text>
-                <TouchableOpacity>
+                <TouchableOpacity onPress={() => navigation.navigate('Matches')}>
                   <Text style={styles.viewAll}>View All</Text>
                 </TouchableOpacity>
               </View>
@@ -150,7 +154,7 @@ export default function HomeScreen() {
                   </View>
                   <View style={styles.matchCardRow}>
                     <View style={styles.teamRowLeft}>
-                      <Text style={styles.flagSmall}>{match.home_flag}</Text>
+                      <Text style={styles.flagSmall}>{getTeamFlag(match.home_team, match.home_flag)}</Text>
                       <Text style={styles.teamNameSmall}>{match.home_team}</Text>
                     </View>
                     <Text style={styles.scoreSmall}>{match.home_score}</Text>
@@ -158,7 +162,7 @@ export default function HomeScreen() {
                   <View style={styles.divider} />
                   <View style={styles.matchCardRow}>
                     <View style={styles.teamRowLeft}>
-                      <Text style={styles.flagSmall}>{match.away_flag}</Text>
+                      <Text style={styles.flagSmall}>{getTeamFlag(match.away_team, match.away_flag)}</Text>
                       <Text style={styles.teamNameSmall}>{match.away_team}</Text>
                     </View>
                     <Text style={styles.scoreSmall}>{match.away_score}</Text>
@@ -173,7 +177,7 @@ export default function HomeScreen() {
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>Upcoming Matches</Text>
-                <TouchableOpacity>
+                <TouchableOpacity onPress={() => navigation.navigate('Matches')}>
                   <Text style={styles.viewAll}>View All</Text>
                 </TouchableOpacity>
               </View>
@@ -181,14 +185,14 @@ export default function HomeScreen() {
                 <View key={match.id} style={styles.upcomingCard}>
                   <View style={styles.upcomingLeft}>
                     <View style={styles.upcomingTeams}>
-                      <Text style={styles.upcomingFlag}>{match.home_flag}</Text>
+                      <Text style={styles.upcomingFlag}>{getTeamFlag(match.home_team, match.home_flag)}</Text>
                       <Text style={styles.upcomingTeamName}>{match.home_team}</Text>
                     </View>
                     <View style={styles.vsBox}>
                       <Text style={styles.vsText}>VS</Text>
                     </View>
                     <View style={styles.upcomingTeams}>
-                      <Text style={styles.upcomingFlag}>{match.away_flag}</Text>
+                      <Text style={styles.upcomingFlag}>{getTeamFlag(match.away_team, match.away_flag)}</Text>
                       <Text style={styles.upcomingTeamName}>{match.away_team}</Text>
                     </View>
                   </View>
@@ -207,14 +211,28 @@ export default function HomeScreen() {
           {/* Tournament News */}
           <View style={[styles.section, { paddingBottom: 24 }]}>
             <Text style={styles.sectionTitle}>Tournament News</Text>
-            {news.map((item, i) => (
-              <TouchableOpacity key={i} style={styles.newsCard}>
-                <View style={styles.newsImagePlaceholder}>
-                  <Ionicons name="football" size={28} color={C.textMuted} />
-                </View>
+            {newsArticles.length === 0 ? (
+              <View style={styles.noLiveCard}>
+                <Ionicons name="newspaper-outline" size={28} color={C.textMuted} />
+                <Text style={styles.noLiveText}>No news published yet</Text>
+              </View>
+            ) : newsArticles.map((item) => (
+              <TouchableOpacity
+                key={item.id}
+                style={styles.newsCard}
+                activeOpacity={0.82}
+                onPress={() => navigation.navigate('NewsDetail', { articleId: item.id })}
+              >
+                {item.image_url ? (
+                  <Image source={{ uri: item.image_url }} style={styles.newsImage} />
+                ) : (
+                  <View style={styles.newsImagePlaceholder}>
+                    <Ionicons name="football" size={28} color={C.textMuted} />
+                  </View>
+                )}
                 <View style={styles.newsContent}>
-                  <View style={[styles.newsTag, { backgroundColor: item.tagColor + '22', borderColor: item.tagColor }]}>
-                    <Text style={[styles.newsTagText, { color: item.tagColor }]}>{item.tag}</Text>
+                  <View style={[styles.newsTag, { backgroundColor: (item.tag_color ?? C.primary) + '22', borderColor: item.tag_color ?? C.primary }]}>
+                    <Text style={[styles.newsTagText, { color: item.tag_color ?? C.primary }]}>{item.tag ?? 'NEWS'}</Text>
                   </View>
                   <Text style={styles.newsTitle}>{item.title}</Text>
                 </View>
@@ -330,6 +348,7 @@ const styles = StyleSheet.create({
     width: 90, height: 90, backgroundColor: C.cardDark,
     alignItems: 'center', justifyContent: 'center',
   },
+  newsImage: { width: 90, height: 90, backgroundColor: C.cardDark },
   newsContent: { flex: 1, padding: 12, justifyContent: 'center' },
   newsTag: {
     alignSelf: 'flex-start', borderWidth: 1, borderRadius: 4,

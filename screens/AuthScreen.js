@@ -65,7 +65,7 @@ export default function AuthScreen() {
           <View style={styles.logoCircle}>
             <Ionicons name="football" size={36} color={C.primary} />
           </View>
-          <Text style={styles.appName}>WORLD CUP 2024</Text>
+          <Text style={styles.appName}>WORLD CUP 2022</Text>
           <Text style={styles.appSub}>Suivez chaque match en direct</Text>
         </View>
 
