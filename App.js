@@ -29,8 +29,8 @@ function BottomTabBar({ state, navigation }) {
   return (
     <View style={{
       flexDirection: 'row',
-      backgroundColor: '#0D1835',
-      borderTopColor: '#1E2D6B',
+      backgroundColor: '#12070D',
+      borderTopColor: '#5A1E2A',
       borderTopWidth: 1,
       height: 62,
       paddingBottom: 10,
@@ -47,8 +47,8 @@ function BottomTabBar({ state, navigation }) {
             onPress={() => navigation.navigate(route.name)}
             activeOpacity={0.7}
           >
-            <Ionicons name={focused ? active : inactive} size={22} color={focused ? '#2ECC71' : '#8A9CC2'} />
-            <Text style={{ fontSize: 11, fontWeight: '600', color: focused ? '#2ECC71' : '#8A9CC2' }}>
+            <Ionicons name={focused ? active : inactive} size={22} color={focused ? '#E53935' : '#B48A96'} />
+            <Text style={{ fontSize: 11, fontWeight: '600', color: focused ? '#E53935' : '#B48A96' }}>
               {route.name}
             </Text>
           </TouchableOpacity>
@@ -75,7 +75,7 @@ function MainApp() {
           setCurrentRoute(navigationRef.getCurrentRoute()?.name ?? 'Home');
       }}
     >
-      <View style={{ flex: 1, flexDirection: 'row', backgroundColor: '#0F143C' }}>
+      <View style={{ flex: 1, flexDirection: 'row', backgroundColor: '#190A12' }}>
         {isWide && <Sidebar currentRoute={currentRoute} onNavigate={handleNavigate} />}
         <View style={{ flex: 1 }}>
           <Tab.Navigator
@@ -86,8 +86,8 @@ function MainApp() {
                 const [active, inactive] = TAB_ICONS[route.name] ?? ['ellipse', 'ellipse-outline'];
                 return <Ionicons name={focused ? active : inactive} size={22} color={color} />;
               },
-              tabBarActiveTintColor: '#2ECC71',
-              tabBarInactiveTintColor: '#8A9CC2',
+              tabBarActiveTintColor: '#E53935',
+              tabBarInactiveTintColor: '#B48A96',
             })}
           >
             <Tab.Screen name="Home"    component={HomeScreen} />
@@ -107,16 +107,16 @@ function AppContent() {
 
   if (session === undefined) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#0F143C', alignItems: 'center', justifyContent: 'center' }}>
-        <StatusBar style="light" backgroundColor="#0F143C" />
-        <Ionicons name="football" size={48} color="#2ECC71" />
+      <View style={{ flex: 1, backgroundColor: '#190A12', alignItems: 'center', justifyContent: 'center' }}>
+        <StatusBar style="light" backgroundColor="#190A12" />
+        <Ionicons name="football" size={48} color="#E53935" />
       </View>
     );
   }
 
   return (
     <>
-      <StatusBar style="light" backgroundColor="#0F143C" />
+      <StatusBar style="light" backgroundColor="#190A12" />
       {session ? <MainApp /> : <AuthScreen />}
     </>
   );

@@ -12,7 +12,7 @@ export default function ExploreScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F143C',
+    backgroundColor: '#190A12',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -24,6 +24,6 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 16,
-    color: '#8A9CC2',
+    color: '#B48A96',
   },
 });

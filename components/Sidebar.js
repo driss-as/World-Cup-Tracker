@@ -2,10 +2,10 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 const C = {
-  bg: '#0D1835',
-  primary: '#2ECC71',
-  textMuted: '#8A9CC2',
-  border: '#1E2D6B',
+  bg: '#12070D',
+  primary: '#E53935',
+  textMuted: '#B48A96',
+  border: '#5A1E2A',
 };
 
 const ROUTES = [

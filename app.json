@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "backgroundColor": "#0F143C",
+    "backgroundColor": "#190A12",
     "ios": {
       "supportsTablet": true
     },
@@ -24,8 +24,8 @@
       "name": "World Cup Tracker",
       "shortName": "WC Tracker",
       "description": "Follow the FIFA World Cup Qatar 2022 — matches, standings, stats and more.",
-      "themeColor": "#1E2D6B",
-      "backgroundColor": "#0F143C",
+      "themeColor": "#E53935",
+      "backgroundColor": "#190A12",
       "lang": "en",
       "scope": "/",
       "startUrl": "/",

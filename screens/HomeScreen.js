@@ -8,14 +8,14 @@ import { supabase } from '../lib/supabase';
 import { getTeamFlag } from '../lib/flags';
 
 const C = {
-  bg: '#0F143C',
-  card: '#162052',
-  cardDark: '#0D1835',
-  primary: '#2ECC71',
-  tertiary: '#2D9CDB',
+  bg: '#190A12',
+  card: '#26101A',
+  cardDark: '#12070D',
+  primary: '#E53935',
+  tertiary: '#FFB020',
   text: '#FFFFFF',
-  textMuted: '#8A9CC2',
-  border: '#1E2D6B',
+  textMuted: '#B48A96',
+  border: '#5A1E2A',
 };
 
 const STAGE_LABEL = {
